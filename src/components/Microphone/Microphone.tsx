@@ -1,20 +1,41 @@
 import { Box, Button, Typography } from "@mui/material";
-import { useEffect, useState } from "react";
-import useAnswers from "../../hooks/useAnswers";
+import { Fragment, useEffect, useState } from "react";
+import useAudio from "../../hooks/useAudio/useAudio";
+import { useAnswers, QuestionMap } from "../../hooks/useLogic";
 import useSpeech from "../../hooks/useSpeech";
 import Person from "../Person";
-import { EPerson } from "../Person/Person.model";
+import { EPerson, Names } from "../Person/Person.model";
 
 const Microphone = () => {
-  const { inProgress, text, start, stop } = useSpeech();
+  const [isStarted, setIsStarted] = useState(false);
   const [person, setPerson] = useState<EPerson>(EPerson.POIROT);
-  const answer = useAnswers(person);
+  const { start, questions } = useSpeech(person);
+  const conversations = useAnswers(questions);
+  const { speaker } = useAudio(conversations);
 
   useEffect(() => {
-    if (text) {
-      answer(text);
+    if (isStarted) {
+      start();
     }
-  }, [answer, text]);
+  }, [isStarted, start]);
+
+  if (conversations.length === 5) {
+    return (
+      <Box
+        display="flex"
+        flexDirection="column"
+        width="100vw"
+        height="100vh"
+        alignItems="center"
+        justifyContent="center"
+      >
+        <Typography fontSize={30} fontWeight={600} color="gold">
+          Wszystkiego Najlepszego!
+        </Typography>
+        <img src="photos/wishes.webp" width={320} alt="Poirot" />
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -25,36 +46,84 @@ const Microphone = () => {
       p={2}
       gap={2}
     >
-      <Box display="flex" gap={2}>
-        <Person
-          name={EPerson.POIROT}
-          isChosen={person === EPerson.POIROT}
-          choose={() => setPerson(EPerson.POIROT)}
-        />
+      <Box
+        display="flex"
+        gap={2}
+        sx={{ flexDirection: { xs: "column", md: "row" } }}
+      >
         <Person
           name={EPerson.HASTINGS}
           isChosen={person === EPerson.HASTINGS}
+          isSpeaking={speaker === EPerson.HASTINGS}
           choose={() => setPerson(EPerson.HASTINGS)}
+        />
+        <Person
+          name={EPerson.POIROT}
+          isChosen={person === EPerson.POIROT}
+          isSpeaking={speaker === EPerson.POIROT}
+          choose={() => setPerson(EPerson.POIROT)}
         />
         <Person
           name={EPerson.JAPP}
           isChosen={person === EPerson.JAPP}
+          isSpeaking={speaker === EPerson.JAPP}
           choose={() => setPerson(EPerson.JAPP)}
         />
       </Box>
-      {text && (
-        <Typography>
-          Question: <b>{text}?</b>
+      {isStarted ? (
+        <Typography fontWeight={600} color="text.disabled">
+          Ask {Names[person]} something!
         </Typography>
-      )}
-      {inProgress ? (
-        <Button variant="contained" onClick={stop}>
-          Finish
-        </Button>
       ) : (
-        <Button variant="contained" onClick={start}>
-          Ask Something
+        <Button variant="contained" onClick={() => setIsStarted(true)}>
+          Enable microphone
         </Button>
+      )}
+      {!isStarted ? null : conversations.length === 0 ? (
+        <Typography>No conversation yet</Typography>
+      ) : (
+        <Box
+          display="flex"
+          flexDirection="column"
+          maxHeight="calc(90vh - 400px)"
+          overflow="auto"
+          maxWidth="90vw"
+          px={1}
+          width={800}
+          gap={2}
+        >
+          {conversations.map((conversation, conversationIndex) => (
+            <Fragment key={conversationIndex}>
+              <Box display="flex" flexDirection="column" gap={0.5}>
+                <Typography fontWeight={600} fontSize={12}>
+                  {Names[conversation.person]}:
+                </Typography>
+                <Box
+                  gap={0.5}
+                  maxWidth={600}
+                  width="calc(90vw - 100px)"
+                  bgcolor="lightgray"
+                  p={1}
+                  borderRadius={1}
+                >
+                  <Typography>{conversation.answerText}</Typography>
+                </Box>
+              </Box>
+              <Box
+                alignSelf="flex-end"
+                maxWidth={600}
+                bgcolor="lightblue"
+                p={1}
+                borderRadius={1}
+                width="calc(90vw - 100px)"
+              >
+                <Typography>
+                  {QuestionMap[conversation.person][conversation.question]}
+                </Typography>
+              </Box>
+            </Fragment>
+          ))}
+        </Box>
       )}
     </Box>
   );

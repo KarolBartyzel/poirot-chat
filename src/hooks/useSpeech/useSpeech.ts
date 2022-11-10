@@ -1,9 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { EPerson } from "../../components/Person/Person.model";
+import { useParse, Question } from "../useLogic";
 import { ISpeechRecognition } from "./useSpeech.model";
 
-const useSpeech = () => {
-  const [text, setText] = useState<string | null>(null);
-  const [inProgress, setInProgress] = useState(false);
+const useSpeech = (person: EPerson) => {
+  const [questions, setQuestions] = useState<
+    {
+      person: EPerson;
+      question: Question;
+    }[]
+  >([]);
+  const parse = useParse(person);
 
   if (!("webkitSpeechRecognition" in window)) {
     throw new Error("This browser is not supported. Try Chrome.");
@@ -14,6 +21,7 @@ const useSpeech = () => {
       window as any
     ).webkitSpeechRecognition();
     speechRecognition.continuous = true;
+    speechRecognition.interimResults = false;
     speechRecognition.lang = "en";
     speechRecognition.onresult = (event) => {
       let result = "";
@@ -22,24 +30,26 @@ const useSpeech = () => {
           result += event.results[i][0].transcript;
         }
       }
-      setText(result);
+      if (result) {
+        const question = parse(result);
+        if (question) {
+          setQuestions((questions) => [question, ...questions]);
+        }
+      }
     };
 
     return speechRecognition;
-  }, []);
+  }, [parse]);
 
-  const start = () => {
-    setText(null);
-    setInProgress(true);
-    speechRecognition.start();
-  };
-  const stop = () => {
-    speechRecognition.stop();
-    setInProgress(false);
-    setText(null);
-  };
+  useEffect(() => {
+    return () => {
+      speechRecognition.stop();
+    };
+  }, [speechRecognition]);
 
-  return { inProgress, text, start, stop };
+  const start = () => speechRecognition.start();
+
+  return { questions, start };
 };
 
 export default useSpeech;

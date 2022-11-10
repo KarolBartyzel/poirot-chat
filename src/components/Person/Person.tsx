@@ -5,10 +5,11 @@ import { EPerson, Names } from "./Person.model";
 interface IPerson {
   name: EPerson;
   isChosen: boolean;
+  isSpeaking: boolean;
   choose: () => void;
 }
 
-const Person = ({ name, isChosen, choose }: IPerson) => {
+const Person = ({ name, isChosen, isSpeaking, choose }: IPerson) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -17,7 +18,12 @@ const Person = ({ name, isChosen, choose }: IPerson) => {
       flexDirection="column"
       alignItems="center"
       gap={1}
-      sx={{ cursor: "pointer" }}
+      sx={{
+        cursor: "pointer",
+        boxSizing: "border-box",
+        borderRadius: 1,
+        border: `3px solid ${isSpeaking ? "gold" : "white"} `,
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={choose}
@@ -25,7 +31,11 @@ const Person = ({ name, isChosen, choose }: IPerson) => {
       <img
         width={300}
         height={300}
-        style={{ objectFit: "cover", opacity: isChosen || isHovered ? 1 : 0.5 }}
+        style={{
+          borderRadius: "4px",
+          objectFit: "cover",
+          opacity: isSpeaking || isChosen || isHovered ? 1 : 0.5,
+        }}
         src={`photos/${name}.${isHovered ? "gif" : "png"}`}
         alt={name}
       />
