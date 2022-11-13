@@ -26,6 +26,8 @@ const useParse = (person: EPerson) => {
       return Question.SONG;
     } else if (rawQuestion.includes("dinner") || rawQuestion.includes("eat")) {
       return Question.DINNER;
+    } else if (rawQuestion.includes("problem")) {
+      return Question.PROBLEM;
     }
     return null;
   };
