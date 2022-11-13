@@ -19,24 +19,6 @@ const Microphone = () => {
     }
   }, [isStarted, start]);
 
-  if (conversations.length === 5) {
-    return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        width="100vw"
-        height="100vh"
-        alignItems="center"
-        justifyContent="center"
-      >
-        <Typography fontSize={30} fontWeight={600} color="gold">
-          Wszystkiego Najlepszego!
-        </Typography>
-        <img src="photos/wishes.webp" width={320} alt="Poirot" />
-      </Box>
-    );
-  }
-
   return (
     <Box
       display="flex"
